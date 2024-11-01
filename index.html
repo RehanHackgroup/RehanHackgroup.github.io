@@ -9,7 +9,7 @@
     // Import the Firebase functions you need
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
     import { getFirestore, collection, addDoc, onSnapshot, orderBy, query } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+    import { getAuth, signInWithPhoneNumber, RecaptchaVerifier, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
     // Your Firebase configuration
     const firebaseConfig = {
@@ -30,21 +30,24 @@
     const db = getFirestore(app);
     const auth = getAuth(app);
 
-    // Sign in anonymously
-    signInAnonymously(auth)
-      .then(() => {
-        console.log("Signed in anonymously");
-      })
-      .catch((error) => {
-        console.error("Error signing in anonymously:", error);
-      });
+    // Get DOM elements
+    const messageContainer = document.getElementById("messages");
+    const messageInput = document.getElementById("message-input");
+    const messageForm = document.getElementById("message-form");
+    const phoneForm = document.getElementById("phone-form");
+    const phoneNumberInput = document.getElementById("phone-number");
+    const verificationCodeInput = document.getElementById("verification-code");
+    const verificationButton = document.getElementById("verification-button");
+
+    // Create a Recaptcha verifier
+    const recaptchaVerifier = new RecaptchaVerifier('recaptcha-container', {}, auth);
 
     // Function to add messages to Firestore
     const addMessage = async (messageText) => {
       try {
         await addDoc(collection(db, "messages"), {
-          text: messageText, // Store the message text directly
-          from: "user",      // Indicate who sent the message
+          text: messageText,
+          from: auth.currentUser.phoneNumber, // Store the user's phone number
           timestamp: new Date()
         });
       } catch (error) {
@@ -53,14 +56,13 @@
     };
 
     // Display messages in real-time
-    const messageContainer = document.getElementById("messages");
     const messagesQuery = query(collection(db, "messages"), orderBy("timestamp"));
     onSnapshot(messagesQuery, (snapshot) => {
       messageContainer.innerHTML = ""; // Clear previous messages
       snapshot.forEach((doc) => {
         const msg = doc.data();
         const messageElement = document.createElement("div");
-        messageElement.className = msg.from === "user" ? "message right" : "message left"; // Left or right side
+        messageElement.className = msg.from === auth.currentUser.phoneNumber ? "message right" : "message left"; // Left for others, right for user
         messageElement.textContent = msg.text; // Display the message text correctly
         messageContainer.appendChild(messageElement);
       });
@@ -68,17 +70,76 @@
     });
 
     // Form submission to send messages
-    document.getElementById("message-form").addEventListener("submit", (e) => {
+    messageForm.addEventListener("submit", (e) => {
       e.preventDefault();
-      const messageInput = document.getElementById("message-input");
       if (messageInput.value.trim() === "") return; // Prevent sending empty messages
       addMessage(messageInput.value); // Pass the input value directly
       messageInput.value = ""; // Clear input field
     });
+
+    // Phone authentication
+    phoneForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const phoneNumber = phoneNumberInput.value;
+
+      signInWithPhoneNumber(auth, phoneNumber, recaptchaVerifier)
+        .then((confirmationResult) => {
+          window.confirmationResult = confirmationResult; // Save the confirmation result
+          console.log("SMS sent!");
+          phoneForm.style.display = "none"; // Hide phone number form
+          document.getElementById("verification-container").style.display = "block"; // Show verification code form
+        })
+        .catch((error) => {
+          console.error("Error during sign-in:", error);
+        });
+    });
+
+    // Verify the code
+    verificationButton.addEventListener("click", () => {
+      const verificationCode = verificationCodeInput.value;
+
+      confirmationResult.confirm(verificationCode)
+        .then((result) => {
+          const user = result.user;
+          console.log("User signed in:", user.phoneNumber);
+          document.getElementById("auth-container").style.display = "none"; // Hide auth container
+          document.getElementById("chat-container").style.display = "flex"; // Show chat
+        })
+        .catch((error) => {
+          console.error("Error verifying code:", error);
+        });
+    });
+
+    // Monitor authentication state
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        console.log("User is signed in:", user.phoneNumber);
+        document.getElementById("auth-container").style.display = "none"; // Hide auth container
+        document.getElementById("chat-container").style.display = "flex"; // Show chat
+      } else {
+        console.log("No user is signed in");
+        document.getElementById("auth-container").style.display = "flex"; // Show auth container
+        document.getElementById("chat-container").style.display = "none"; // Hide chat
+      }
+    });
   </script>
 </head>
 <body>
-  <div id="chat-container">
+  <div id="auth-container">
+    <h2>Login with Phone Number</h2>
+    <form id="phone-form">
+      <input type="tel" id="phone-number" placeholder="Enter your phone number" required>
+      <div id="recaptcha-container"></div> <!-- Recaptcha widget -->
+      <button type="submit">Send Verification Code</button>
+    </form>
+
+    <div id="verification-container" style="display: none;">
+      <input type="text" id="verification-code" placeholder="Enter verification code" required>
+      <button id="verification-button">Verify Code</button>
+    </div>
+  </div>
+
+  <div id="chat-container" style="display: none;">
     <h2>Chat Room</h2>
     <div id="messages"></div>
     <form id="message-form">
