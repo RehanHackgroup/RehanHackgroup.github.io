@@ -8,7 +8,6 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
     import { getFirestore, collection, addDoc, onSnapshot, orderBy, query } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-    import { getAuth, signInWithPhoneNumber, RecaptchaVerifier, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAVRMHhV4iSykKYYF49BeYPbklTgpzg6dQ",
@@ -23,30 +22,20 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    const auth = getAuth(app);
 
     const messageContainer = document.getElementById("messages");
     const messageInput = document.getElementById("message-input");
     const messageForm = document.getElementById("message-form");
-    // const phoneForm = document.getElementById("phone-form");
-    // const phoneNumberInput = document.getElementById("phone-number");
-    // const verificationCodeInput = document.getElementById("verification-code");
-    // const verificationButton = document.getElementById("verification-button");
-    // const verificationContainer = document.getElementById("verification-container");
+    const usernameForm = document.getElementById("username-form");
+    const usernameInput = document.getElementById("username");
 
-    // Create a ReCAPTCHA verifier
-    // let recaptchaVerifier;
-
-    // const setupRecaptcha = () => {
-    //   recaptchaVerifier = new RecaptchaVerifier('recaptcha-container', {}, auth);
-    //   recaptchaVerifier.render();
-    // };
+    let username = "";
 
     const addMessage = async (messageText) => {
       try {
         await addDoc(collection(db, "messages"), {
           text: messageText,
-          from: auth.currentUser ? auth.currentUser.phoneNumber : "Anonymous", // Default to "Anonymous" if not logged in
+          from: username, // Use the selected username
           timestamp: new Date()
         });
       } catch (error) {
@@ -60,11 +49,11 @@
       snapshot.forEach((doc) => {
         const msg = doc.data();
         const messageElement = document.createElement("div");
-        messageElement.className = msg.from === (auth.currentUser ? auth.currentUser.phoneNumber : "Anonymous") ? "message right" : "message left"; // Handle anonymous case
-        messageElement.textContent = msg.text; 
+        messageElement.className = msg.from === username ? "message right" : "message left"; // Show messages based on sender
+        messageElement.textContent = `${msg.from}: ${msg.text}`; // Include username with the message
         messageContainer.appendChild(messageElement);
       });
-      messageContainer.scrollTop = messageContainer.scrollHeight;
+      messageContainer.scrollTop = messageContainer.scrollHeight; // Scroll to the bottom
     });
 
     messageForm.addEventListener("submit", (e) => {
@@ -74,65 +63,26 @@
       messageInput.value = ""; 
     });
 
-    // phoneForm.addEventListener("submit", (e) => {
-    //   e.preventDefault();
-    //   const phoneNumber = phoneNumberInput.value;
-
-    //   signInWithPhoneNumber(auth, phoneNumber, recaptchaVerifier)
-    //     .then((confirmationResult) => {
-    //       window.confirmationResult = confirmationResult; // Save confirmation result
-    //       console.log("SMS sent!");
-    //       phoneForm.style.display = "none"; 
-    //       verificationContainer.style.display = "block"; // Show verification code input
-    //     })
-    //     .catch((error) => {
-    //       console.error("Error during sign-in:", error);
-    //     });
-    // });
-
-    // verificationButton.addEventListener("click", () => {
-    //   const verificationCode = verificationCodeInput.value;
-
-    //   window.confirmationResult.confirm(verificationCode)
-    //     .then((result) => {
-    //       const user = result.user;
-    //       console.log("User signed in:", user.phoneNumber);
-    //       document.getElementById("auth-container").style.display = "none";
-    //       document.getElementById("chat-container").style.display = "flex"; 
-    //     })
-    //     .catch((error) => {
-    //       console.error("Error verifying code:", error);
-    //     });
-    // });
-
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        console.log("User is signed in:", user.phoneNumber);
-        document.getElementById("auth-container").style.display = "none"; 
-        document.getElementById("chat-container").style.display = "flex"; 
-      } else {
-        console.log("No user is signed in");
-        // setupRecaptcha(); // Initialize reCAPTCHA if not signed in
-        document.getElementById("auth-container").style.display = "flex"; 
-        document.getElementById("chat-container").style.display = "none"; 
+    usernameForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      username = usernameInput.value.trim();
+      if (username === "") {
+        alert("Please enter a username.");
+        return;
       }
+      document.getElementById("auth-container").style.display = "none"; // Hide username form
+      document.getElementById("chat-container").style.display = "flex"; // Show chat
     });
   </script>
 </head>
 <body>
-  <!--  <div id="auth-container">
-    <h2>Login with Phone Number</h2>
-    <form id="phone-form">
-      <input type="tel" id="phone-number" placeholder="Enter your phone number" required>
-      <div id="recaptcha-container"></div>
-      <button type="submit">Send Verification Code</button>
+  <div id="auth-container">
+    <h2>Enter Your Username</h2>
+    <form id="username-form">
+      <input type="text" id="username" placeholder="Choose a username" required>
+      <button type="submit">Join Chat</button>
     </form>
-
-    <div id="verification-container" style="display: none;">
-      <input type="text" id="verification-code" placeholder="Enter verification code" required>
-      <button id="verification-button">Verify Code</button>
-    </div>
-  </div>   -->
+  </div>
 
   <div id="chat-container" style="display: none;">
     <h2>Chat Room</h2>
@@ -142,23 +92,5 @@
       <button type="submit">Send</button>
     </form>
   </div>
-
-  <!-- Uncomment the following section to enable the login form -->
-  <!--
-  <div id="auth-container">
-    <h2>Login with Phone Number</h2>
-    <form id="phone-form">
-      <input type="tel" id="phone-number" placeholder="Enter your phone number" required>
-      <div id="recaptcha-container"></div>
-      <button type="submit">Send Verification Code</button>
-    </form>
-
-    <div id="verification-container" style="display: none;">
-      <input type="text" id="verification-code" placeholder="Enter verification code" required>
-      <button id="verification-button">Verify Code</button>
-    </div>
-  </div>
-  -->
-
 </body>
 </html>
