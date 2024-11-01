@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat Room</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="module">
+    // Import the Firebase functions you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, onSnapshot, orderBy, query } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+
+    // Your Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyAVRMHhV4iSykKYYF49BeYPbklTgpzg6dQ",
+      authDomain: "local-chats-8b325.firebaseapp.com",
+      databaseURL: "https://local-chats-8b325-default-rtdb.firebaseio.com",
+      projectId: "local-chats-8b325",
+      storageBucket: "local-chats-8b325.appspot.com",
+      messagingSenderId: "215947954649",
+      appId: "1:215947954649:web:effd8cc0a634fe09d3b1c8",
+      measurementId: "G-XSJJS1MG5M"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    
+    // Initialize Firestore and Auth
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    // Sign in anonymously
+    signInAnonymously(auth)
+      .then(() => {
+        console.log("Signed in anonymously");
+      })
+      .catch((error) => {
+        console.error("Error signing in anonymously:", error);
+      });
+
+    // Function to add messages to Firestore
+    const addMessage = async (message) => {
+      try {
+        await addDoc(collection(db, "messages"), {
+          text: message,
+          timestamp: new Date()
+        });
+      } catch (error) {
+        console.error("Error adding document: ", error);
+      }
+    };
+
+    // Display messages in real-time
+    const messageContainer = document.getElementById("messages");
+    const messagesQuery = query(collection(db, "messages"), orderBy("timestamp"));
+    onSnapshot(messagesQuery, (snapshot) => {
+      messageContainer.innerHTML = ""; // Clear previous messages
+      snapshot.forEach((doc) => {
+        const msg = doc.data();
+        const messageElement = document.createElement("div");
+        messageElement.textContent = msg.text;
+        messageContainer.appendChild(messageElement);
+      });
+      messageContainer.scrollTop = messageContainer.scrollHeight; // Scroll to the bottom
+    });
+
+    // Form submission to send messages
+    document.getElementById("message-form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const messageInput = document.getElementById("message-input");
+      addMessage(messageInput.value);
+      messageInput.value = ""; // Clear input field
+    });
+  </script>
+</head>
+<body>
+  <div id="chat-container">
+    <h2>Chat Room</h2>
+    <div id="messages"></div>
+    <form id="message-form">
+      <input type="text" id="message-input" placeholder="Type your message here..." required>
+      <button type="submit">Send</button>
+    </form>
+  </div>
+</body>
+</html>
