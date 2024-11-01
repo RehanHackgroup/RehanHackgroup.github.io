@@ -71,6 +71,7 @@
     document.getElementById("message-form").addEventListener("submit", (e) => {
       e.preventDefault();
       const messageInput = document.getElementById("message-input");
+      if (messageInput.value.trim() === "") return; // Prevent sending empty messages
       addMessage(messageInput.value); // Pass the input value directly
       messageInput.value = ""; // Clear input field
     });
