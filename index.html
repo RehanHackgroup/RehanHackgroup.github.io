@@ -28,25 +28,25 @@
     const messageContainer = document.getElementById("messages");
     const messageInput = document.getElementById("message-input");
     const messageForm = document.getElementById("message-form");
-    const phoneForm = document.getElementById("phone-form");
-    const phoneNumberInput = document.getElementById("phone-number");
-    const verificationCodeInput = document.getElementById("verification-code");
-    const verificationButton = document.getElementById("verification-button");
-    const verificationContainer = document.getElementById("verification-container");
+    // const phoneForm = document.getElementById("phone-form");
+    // const phoneNumberInput = document.getElementById("phone-number");
+    // const verificationCodeInput = document.getElementById("verification-code");
+    // const verificationButton = document.getElementById("verification-button");
+    // const verificationContainer = document.getElementById("verification-container");
 
     // Create a ReCAPTCHA verifier
-    let recaptchaVerifier;
+    // let recaptchaVerifier;
 
-    const setupRecaptcha = () => {
-      recaptchaVerifier = new RecaptchaVerifier('recaptcha-container', {}, auth);
-      recaptchaVerifier.render();
-    };
+    // const setupRecaptcha = () => {
+    //   recaptchaVerifier = new RecaptchaVerifier('recaptcha-container', {}, auth);
+    //   recaptchaVerifier.render();
+    // };
 
     const addMessage = async (messageText) => {
       try {
         await addDoc(collection(db, "messages"), {
           text: messageText,
-          from: auth.currentUser.phoneNumber,
+          from: auth.currentUser ? auth.currentUser.phoneNumber : "Anonymous", // Default to "Anonymous" if not logged in
           timestamp: new Date()
         });
       } catch (error) {
@@ -60,7 +60,7 @@
       snapshot.forEach((doc) => {
         const msg = doc.data();
         const messageElement = document.createElement("div");
-        messageElement.className = msg.from === auth.currentUser.phoneNumber ? "message right" : "message left";
+        messageElement.className = msg.from === (auth.currentUser ? auth.currentUser.phoneNumber : "Anonymous") ? "message right" : "message left"; // Handle anonymous case
         messageElement.textContent = msg.text; 
         messageContainer.appendChild(messageElement);
       });
@@ -74,36 +74,36 @@
       messageInput.value = ""; 
     });
 
-    phoneForm.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const phoneNumber = phoneNumberInput.value;
+    // phoneForm.addEventListener("submit", (e) => {
+    //   e.preventDefault();
+    //   const phoneNumber = phoneNumberInput.value;
 
-      signInWithPhoneNumber(auth, phoneNumber, recaptchaVerifier)
-        .then((confirmationResult) => {
-          window.confirmationResult = confirmationResult; // Save confirmation result
-          console.log("SMS sent!");
-          phoneForm.style.display = "none"; 
-          verificationContainer.style.display = "block"; // Show verification code input
-        })
-        .catch((error) => {
-          console.error("Error during sign-in:", error);
-        });
-    });
+    //   signInWithPhoneNumber(auth, phoneNumber, recaptchaVerifier)
+    //     .then((confirmationResult) => {
+    //       window.confirmationResult = confirmationResult; // Save confirmation result
+    //       console.log("SMS sent!");
+    //       phoneForm.style.display = "none"; 
+    //       verificationContainer.style.display = "block"; // Show verification code input
+    //     })
+    //     .catch((error) => {
+    //       console.error("Error during sign-in:", error);
+    //     });
+    // });
 
-    verificationButton.addEventListener("click", () => {
-      const verificationCode = verificationCodeInput.value;
+    // verificationButton.addEventListener("click", () => {
+    //   const verificationCode = verificationCodeInput.value;
 
-      window.confirmationResult.confirm(verificationCode)
-        .then((result) => {
-          const user = result.user;
-          console.log("User signed in:", user.phoneNumber);
-          document.getElementById("auth-container").style.display = "none";
-          document.getElementById("chat-container").style.display = "flex"; 
-        })
-        .catch((error) => {
-          console.error("Error verifying code:", error);
-        });
-    });
+    //   window.confirmationResult.confirm(verificationCode)
+    //     .then((result) => {
+    //       const user = result.user;
+    //       console.log("User signed in:", user.phoneNumber);
+    //       document.getElementById("auth-container").style.display = "none";
+    //       document.getElementById("chat-container").style.display = "flex"; 
+    //     })
+    //     .catch((error) => {
+    //       console.error("Error verifying code:", error);
+    //     });
+    // });
 
     onAuthStateChanged(auth, (user) => {
       if (user) {
@@ -112,7 +112,7 @@
         document.getElementById("chat-container").style.display = "flex"; 
       } else {
         console.log("No user is signed in");
-        setupRecaptcha(); // Initialize reCAPTCHA if not signed in
+        // setupRecaptcha(); // Initialize reCAPTCHA if not signed in
         document.getElementById("auth-container").style.display = "flex"; 
         document.getElementById("chat-container").style.display = "none"; 
       }
