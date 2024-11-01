@@ -1,35 +1,99 @@
-/* Add styles for phone authentication forms */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #F0F0F0;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
 #auth-container {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  height: 100vh; /* Full height */
-  background-color: #121212; /* Dark background */
+    width: 100%;
+    max-width: 400px;
+    background-color: #FFFFFF;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
 }
 
-#auth-container h2 {
-  margin: 10px 0;
+#chat-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 400px;
+    background-color: #FFFFFF;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    position: relative;
 }
 
-#auth-container form {
-  display: flex;
-  flex-direction: column;
-  margin: 10px;
+h2 {
+    text-align: center;
+    color: #333;
 }
 
-#auth-container input {
-  padding: 10px;
-  margin: 5px;
-  border-radius: 5px;
-  border: none;
+#messages {
+    height: 300px;
+    overflow-y: auto;
+    margin-bottom: 10px;
+    padding: 10px;
+    border: 1px solid #E0E0E0;
+    border-radius: 4px;
+    background-color: #FAFAFA;
+}
+
+.message {
+    padding: 10px;
+    margin: 5px 0;
+    border-radius: 4px;
+    max-width: 80%;
+}
+
+.left {
+    background-color: #E0E0E0;
+    align-self: flex-start;
+}
+
+.right {
+    background-color: #0078D4; /* Blue for outgoing messages */
+    color: white;
+    align-self: flex-end;
+}
+
+form {
+    display: flex;
+    margin-top: 10px;
+}
+
+input[type="text"],
+input[type="tel"] {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #E0E0E0;
+    border-radius: 4px;
+    margin-right: 10px;
 }
 
 button {
-  padding: 10px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
+    padding: 10px 15px;
+    background-color: #0078D4; /* Button color */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #005BA1; /* Darker blue on hover */
+}
+
+#recaptcha-container {
+    margin: 10px 0;
+}
+
+#verification-container {
+    margin-top: 10px;
 }
