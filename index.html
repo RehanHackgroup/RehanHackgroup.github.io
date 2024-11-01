@@ -40,10 +40,11 @@
       });
 
     // Function to add messages to Firestore
-    const addMessage = async (message) => {
+    const addMessage = async (messageText) => {
       try {
         await addDoc(collection(db, "messages"), {
-          text: message,
+          text: messageText, // Store the message text directly
+          from: "user",      // Indicate who sent the message
           timestamp: new Date()
         });
       } catch (error) {
@@ -60,7 +61,7 @@
         const msg = doc.data();
         const messageElement = document.createElement("div");
         messageElement.className = msg.from === "user" ? "message right" : "message left"; // Left or right side
-        messageElement.textContent = msg.text;
+        messageElement.textContent = msg.text; // Display the message text correctly
         messageContainer.appendChild(messageElement);
       });
       messageContainer.scrollTop = messageContainer.scrollHeight; // Scroll to the bottom
@@ -70,7 +71,7 @@
     document.getElementById("message-form").addEventListener("submit", (e) => {
       e.preventDefault();
       const messageInput = document.getElementById("message-input");
-      addMessage({ text: messageInput.value, from: "user" });
+      addMessage(messageInput.value); // Pass the input value directly
       messageInput.value = ""; // Clear input field
     });
   </script>
