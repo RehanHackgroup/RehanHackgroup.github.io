@@ -59,6 +59,7 @@
       snapshot.forEach((doc) => {
         const msg = doc.data();
         const messageElement = document.createElement("div");
+        messageElement.className = msg.from === "user" ? "message right" : "message left"; // Left or right side
         messageElement.textContent = msg.text;
         messageContainer.appendChild(messageElement);
       });
@@ -69,7 +70,7 @@
     document.getElementById("message-form").addEventListener("submit", (e) => {
       e.preventDefault();
       const messageInput = document.getElementById("message-input");
-      addMessage(messageInput.value);
+      addMessage({ text: messageInput.value, from: "user" });
       messageInput.value = ""; // Clear input field
     });
   </script>
